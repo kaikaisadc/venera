@@ -25,9 +25,7 @@ if (flutterVersionName == null) {
     flutterVersionName = "1.0"
 }
 
-def keystorePropertiesFile = rootProject.file("key.properties")
-def keystoreProperties = new Properties()
-keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+// 【修改点1】删除了读取 key.properties 的代码，因为云端没有这个密码文件
 
 android {
     namespace = "com.github.wgh136.venera"
@@ -57,20 +55,7 @@ android {
         jvmTarget = JavaVersion.VERSION_17
     }
 
-    signingConfigs {
-        debug {
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-        }
-        release {
-            keyAlias keystoreProperties['keyAlias']
-            keyPassword keystoreProperties['keyPassword']
-            storeFile file(keystoreProperties['storeFile'])
-            storePassword keystoreProperties['storePassword']
-        }
-    }
+    // 【修改点2】整个删除了 signingConfigs 模块，让系统使用默认签名
 
     defaultConfig {
         applicationId = "com.github.wgh136.venera"
@@ -89,13 +74,13 @@ android {
             ndk {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
             }
-            signingConfig signingConfigs.release
+            // 【修改点3】删除了 release 的 signingConfig 引用
         }
         debug {
             ndk {
                 abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
             }
-            signingConfig signingConfigs.debug
+            // 【修改点4】删除了 debug 的 signingConfig 引用
         }
     }
 
