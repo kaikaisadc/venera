@@ -69,6 +69,97 @@ android {
 
     buildTypes {
         release {
+            // 开启 R8 代码压缩与混淆
+            minifyEnabled true
+            // 开启无用资源移除
+            shrinkResources true
+            // 【新增优化】指定默认优化规则和自定义混淆规则文件
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            
+            ndk {
+                abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+            }
+            // 【修改点3】删除了 release 的 signingConfig 引用
+        }
+        debug {
+            ndk {
+                abiFilters "armeabi-v7a", "arm64-v8a", "x86_64"
+            }
+            // 【修改点4】删除了 debug 的 signingConfig 引用
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            def abi = output.getFilter(com.android.build.OutputFile.ABI)
+            if (variant.buildType.name == "release") {
+                if (abi != null) {
+                    outputFileName = "venera-${variant.versionName}-${abi}.apk"
+                    def abiVersionCode = project.ext.abiCodes.get(abi)
+                    if (abiVersionCode != null) {
+                        versionCodeOverride = variant.versionCode * 10 + abiVersionCode
+                    }
+                } else {
+                    outputFileName = "venera-${variant.versionName}.apk"
+                    versionCodeOverride = variant.versionCode * 10
+                }
+            } else if (variant.buildType.name == "debug") {
+                versionCodeOverride = variant.versionCode * 10 + 4
+            }
+        }
+    }
+
+    dependenciesInfo {
+        // Disables dependency metadata when building APKs.
+        includeInApk = false
+        // Disables dependency metadata when building Android App Bundles.
+        includeInBundle = false
+    }
+}
+
+flutter {
+    source = "../.."
+}
+
+dependencies {
+    implementation "androidx.activity:activity-ktx:1.10.1"
+    implementation 'androidx.documentfile:documentfile:1.0.1'
+}
+            useLegacyPackaging true
+        }
+    }
+
+    splits{
+        abi {
+            reset()
+            include 'armeabi-v7a', 'arm64-v8a', 'x86_64'
+            enable true
+            universalApk true
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+    kotlinOptions{
+        jvmTarget = JavaVersion.VERSION_17
+    }
+
+    // 【修改点2】整个删除了 signingConfigs 模块，让系统使用默认签名
+
+    defaultConfig {
+        applicationId = "com.github.wgh136.venera"
+        // You can update the following values to match your application needs.
+        // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
+        minSdk = flutter.minSdkVersion
+        targetSdk = flutter.targetSdkVersion
+        versionCode = flutterVersionCode.toInteger()
+        versionName = flutterVersionName
+    }
+
+    buildTypes {
+        release {
             minifyEnabled true
             shrinkResources true
             ndk {
